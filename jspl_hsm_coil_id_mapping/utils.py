@@ -1,8 +1,9 @@
 import cv2
 import pytz
-import constants
+import traceback
 import numpy as np
 from datetime import datetime
+import jspl_hsm_coil_id_mapping.constants
 from ripikvisionpy.commons.kinter.Utils import Utils
 
 utils = Utils()
