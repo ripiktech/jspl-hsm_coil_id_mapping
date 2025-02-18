@@ -25,7 +25,7 @@ class CoilTracker:
         is_id_present = self.model(frame)
         return is_id_present
 
-    def add(self, frame, is_id_present=None):
+    def add(self, frame, is_id_present=0):
         if self.model:
             is_id_present = self._predict(frame)
         self._add_to_buffer(is_id_present)
@@ -158,13 +158,14 @@ class Reader:
             text=self.prompt, 
             images=image, 
             return_tensors="pt").to(self.device)
-        generated_ids = self.model.generate(
-            input_ids=inputs["input_ids"],
-            pixel_values=inputs["pixel_values"],
-            max_new_tokens=4096,
-            num_beams=3,
-            do_sample=False
-        )
+        with torch.autocast(device_type="cuda"):
+            generated_ids = self.model.generate(
+                input_ids=inputs["input_ids"],
+                pixel_values=inputs["pixel_values"],
+                max_new_tokens=4096,
+                num_beams=3,
+                do_sample=False
+            )
         generated_text = self.processor.batch_decode(
             generated_ids, 
             skip_special_tokens=False
