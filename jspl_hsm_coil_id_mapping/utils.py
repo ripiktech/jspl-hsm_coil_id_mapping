@@ -3,26 +3,14 @@ import pytz
 import traceback
 import numpy as np
 from datetime import datetime
-import jspl_hsm_coil_id_mapping.constants
+import jspl_hsm_coil_id_mapping.constants as constants
 from ripikvisionpy.commons.kinter.Utils import Utils
 import logging
+import numpy as np
 
 utils = Utils()
 DB = None
 DB_UTILS_OS = 'UBUNTU'
-
-def get_camera_data(client_meta, material, camera_id):
-    try:
-        camera_info = client_meta['toolsV2'][material]
-        for row in camera_info:
-            if row['cameraId'] == camera_id:
-                return row
-        return None
-
-    except Exception as e:
-        logging.error("Exception in getting camera data : " + str(e))
-        return None
-
 
 def rotate_image(image, angle):
     """
@@ -111,6 +99,15 @@ def get_response_with_s3_links(
     record,
     aws_bucket_name,
 ):
+    '''
+    Prepare response with S3 links for foreign object detection
+    Args:
+        record: dict: Response from the model
+        s3: botocore.client: S3 client
+        aws_bucket_name: str: S3 bucket name
+    Returns:
+        record: dict: Response with S3 links
+    '''
     created_at =int(get_utc_timestamp(milli=True))
     timestamp_epoch = ((created_at / 1000) + 19800)
     timestamp_obj = datetime.utcfromtimestamp(timestamp_epoch)
@@ -132,11 +129,36 @@ def get_response_with_s3_links(
         if tag in record:
             if not isinstance(record[tag], str):
                 record[tag] = cv2.resize(record[tag], (0, 0), None, resize_prop, resize_prop)
-                object_key = f'{record["clientId"]}/loc1/{record["usecase"]}/{record["cameraGrpId"]}/{record["cameraId"]}/{subfolder}/{tag}/{date}/{hour}/{record["cameraId"]}_{tag}_{date}_{time_}.jpg'
+                object_key = f'{record["clientId"]}/loc1/{record["usecase"]}/{record["cameraGpId"]}/{record["cameraId"]}/{subfolder}/{tag}/{date}/{hour}/{record["cameraId"]}_{tag}_{date}_{time_}.jpg'
                 signedUrl = uploadImgS3(img = record[tag], s3 = s3, bucket = aws_bucket_name, key = object_key)
                 record[tag] = signedUrl
                 print(f'S3 Upload Complete: {tag}')
     return record
+
+def prepare_response(
+    client_id: str,
+    camera_id: str,
+    ocr_id: str,
+    entity_id: int,
+    is_coil_present: bool,
+    is_alert: bool,
+    original_image: np.ndarray,
+    annotated_image: np.ndarray,
+):
+    model_response = dict()
+    model_response["cameraId"] = camera_id
+    model_response["clientId"] = client_id
+    model_response["cameraGpId"] = constants.CAMERA_GP_ID
+    model_response["plantId"] = constants.PLANT_ID
+    model_response["usecase"] = constants.USE_CASE
+    model_response["coilId"] = ocr_id
+    model_response["entityId"] = entity_id
+    model_response["duplicateIds"] = []
+    model_response["isCoilPresent"] = is_coil_present
+    model_response["isAlert"] = is_alert
+    model_response["originalImage"] = original_image
+    model_response["annotatedImage"] = annotated_image
+    return model_response
 
 def push_data_to_mongo(response: dict, client_meta_wrapper, client_meta):
     try:
