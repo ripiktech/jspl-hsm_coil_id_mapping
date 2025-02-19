@@ -22,7 +22,7 @@ class OCRBuffer:
     def __init__(self, id_len=10):
         self.buffer = dict()
         self.id_len = id_len
-        self.year = 25
+        self.year = str(datetime.now().year)[-2:]
     
     def _validate(self, id):
         try:
@@ -59,8 +59,8 @@ class OCRBuffer:
             best_id.append(best_char)
         return "".join(best_id)
 
-    def is_empty(self):
-        return True if len(self.buffer) == 0 else False
+    # def is_empty(self):
+    #     return True if len(self.buffer) == 0 else False
     
     def empty(self):
         self.buffer = dict()

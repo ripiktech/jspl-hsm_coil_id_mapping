@@ -128,7 +128,7 @@ class CoilTracker:
         _filter_large_bboxes(bboxes, image_width, image_height, size_tolerance): Filter out bounding 
                                                                                  boxes that are too large.
     """
-    def __init__(self, model=None, buffer_length=50, window_size=25):
+    def __init__(self, model=None, buffer_length=50, window_size=10):
         self.model = model
         self.buffer_length = buffer_length
         self.window_size = window_size
@@ -191,10 +191,11 @@ class CoilTracker:
         is_coil_present = 0
         print("Scores:", scores)
         if scores.shape[0] > 0:
-            max_score_idx = torch.argmax(scores)
-            max_score_bbox = res["boxes"][max_score_idx].cpu().numpy().tolist()
+            bboxes = res["boxes"].cpu().numpy().tolist()
             bboxes = self._filter_large_bboxes([max_score_bbox], frame.size[1], frame.size[0])
-            is_coil_present = 1 if len(bboxes) else 0
+            max_score_idx = torch.argmax(scores).item()
+            max_score_bbox = bboxes[max_score_idx]
+            is_coil_present = 1 if len(max_score_bbox) else 0
             # drawn = draw_bboxes_with_labels(frame, {"coil": bboxes})
             # drawn.save("pred.jpg")
             if is_coil_present:
