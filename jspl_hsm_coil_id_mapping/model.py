@@ -128,7 +128,7 @@ class CoilTracker:
         _filter_large_bboxes(bboxes, image_width, image_height, size_tolerance): Filter out bounding 
                                                                                  boxes that are too large.
     """
-    def __init__(self, model=None, buffer_length=100, window_size=50):
+    def __init__(self, model=None, buffer_length=50, window_size=25):
         self.model = model
         self.buffer_length = buffer_length
         self.window_size = window_size
@@ -189,6 +189,7 @@ class CoilTracker:
         res = self.model.predict(frame)
         scores = res["scores"]
         is_coil_present = 0
+        print("Scores:", scores)
         if scores.shape[0] > 0:
             max_score_idx = torch.argmax(scores)
             max_score_bbox = res["boxes"][max_score_idx].cpu().numpy().tolist()
