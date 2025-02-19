@@ -192,7 +192,7 @@ class CoilTracker:
         print("Scores:", scores)
         if scores.shape[0] > 0:
             bboxes = res["boxes"].cpu().numpy().tolist()
-            bboxes = self._filter_large_bboxes([max_score_bbox], frame.size[1], frame.size[0])
+            bboxes = self._filter_large_bboxes(bboxes, frame.size[1], frame.size[0])
             max_score_idx = torch.argmax(scores).item()
             max_score_bbox = bboxes[max_score_idx]
             is_coil_present = 1 if len(max_score_bbox) else 0
