@@ -5,10 +5,24 @@ import numpy as np
 from datetime import datetime
 import jspl_hsm_coil_id_mapping.constants
 from ripikvisionpy.commons.kinter.Utils import Utils
+import logging
 
 utils = Utils()
 DB = None
 DB_UTILS_OS = 'UBUNTU'
+
+def get_camera_data(client_meta, material, camera_id):
+    try:
+        camera_info = client_meta['toolsV2'][material]
+        for row in camera_info:
+            if row['cameraId'] == camera_id:
+                return row
+        return None
+
+    except Exception as e:
+        logging.error("Exception in getting camera data : " + str(e))
+        return None
+
 
 def rotate_image(image, angle):
     """
@@ -113,12 +127,12 @@ def get_response_with_s3_links(
     else:
         subfolder = 'no'
     image_tags = ['originalImage', 'annotatedImage']
-    resize_prop = constants.RESIZE_IMAGE_PERCENTAGE / 100
+    resize_prop = 100 / 100
     for tag in image_tags:
         if tag in record:
             if not isinstance(record[tag], str):
                 record[tag] = cv2.resize(record[tag], (0, 0), None, resize_prop, resize_prop)
-                object_key = f'{record["clientId"]}/loc1/{record["usecase"]}/{record["cameraGpId"]}/{record["cameraId"]}/{subfolder}/{tag}/{date}/{hour}/{record["cameraId"]}_{tag}_{date}_{time_}.jpg'
+                object_key = f'{record["clientId"]}/loc1/{record["usecase"]}/{record["cameraGrpId"]}/{record["cameraId"]}/{subfolder}/{tag}/{date}/{hour}/{record["cameraId"]}_{tag}_{date}_{time_}.jpg'
                 signedUrl = uploadImgS3(img = record[tag], s3 = s3, bucket = aws_bucket_name, key = object_key)
                 record[tag] = signedUrl
                 print(f'S3 Upload Complete: {tag}')

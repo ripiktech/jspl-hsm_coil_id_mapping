@@ -31,6 +31,8 @@ class OCRBuffer:
     #     return id, occ
     
     def get(self):
+        if not self.buffer:
+            return ""
         # id, occ = max(self.buffer.items(), key=lambda x: x[1])
         # Initialize the result ID
         best_id = []
