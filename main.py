@@ -117,7 +117,7 @@ if __name__ == "__main__":
                 model_response["isAlert"] = False
                 model_response["originalImage"] = frame.copy()
                 model_response["annotatedImage"] = frame.copy()
-                model_response["cameraGrpId"] = "cameraGp1"
+                model_response["cameraGpId"] = "cameraGp1"
                 model_response["plantId"] = PLANT_ID
                 model_response["cameraId"] = CAMERA_ID
                 model_response["clientId"] = CLIENT_ID
