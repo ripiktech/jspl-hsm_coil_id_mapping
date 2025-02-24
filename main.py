@@ -19,7 +19,8 @@ from jspl_hsm_coil_id_mapping.utils import (
     rotate_image,
     get_response_with_s3_links,
     push_data_to_mongo,
-    prepare_response
+    prepare_response,
+    rotate_around_center
 )
 
 client_meta_wrapper = ClientMetaWrapperV3(version=1)
@@ -62,7 +63,6 @@ if __name__ == "__main__":
     t_last_id_push = None
     entity_id = None
     while True:
-        # 
         try:
             frame = cap.read()
             if frame is None:
@@ -93,13 +93,15 @@ if __name__ == "__main__":
             # If coil present and has a valid OCR.
             if curr_coil_status and len(text) > 0:
                 ocr_buffer.add(text[0])
+                ocr_img = frame.copy()
+                ocr_img_crop = coil_crop.copy()
                 # Push coilId to backend in 30s intervals.
+                # Send a response to backend
                 if (t_last_id_push == None) or (t_last_id_push - time.time()) > constants.ID_PUSH_COOLDOWN:
                     push_to_backend = True
-                    ocr_img = frame.copy()
-                    ocr_img_crop = coil_crop.copy()
-                    # Send a response to backend
-            elif last_coil_status and not(curr_coil_status):
+                    
+            elif last_coil_status and \
+                 not(curr_coil_status):
                 # Final id push for a coil
                 push_to_backend = True
                 is_final_push = True
@@ -109,9 +111,17 @@ if __name__ == "__main__":
                 push_to_backend or 
                 (time.time() - t_last_id_push) > 30
             )
+            if not(last_coil_status) and not(curr_coil_status):
+                ocr_buffer.empty()
             if push_to_backend:
                 # if ocr_img
                 ocr_id = ocr_buffer.get()
+                if ocr_img is not None:
+                    original_image = ocr_img.copy()
+                    annotated_image = ocr_img_crop.copy()
+                else:
+                    original_image = frame.copy()
+                    annotated_image = coil_crop.copy()
                 model_response = prepare_response(
                     client_id=CLIENT_ID,
                     camera_id=CAMERA_ID,
@@ -119,8 +129,8 @@ if __name__ == "__main__":
                     entity_id=entity_id,
                     is_coil_present=(last_coil_status == 1),
                     is_alert=(is_final_push and ocr_id == ""),
-                    original_image=frame.copy() if ocr_img is None else ocr_img,
-                    annotated_image=coil_crop.copy() if ocr_img_crop is None else ocr_img_crop
+                    original_image=rotate_around_center(original_image, 7.0),
+                    annotated_image=annotated_image
                 )
                 backend_response = get_response_with_s3_links(s3, model_response, aws_bucket_name=constants.AWS_BUCKET_NAME)
                 push_data_to_mongo(
@@ -142,5 +152,3 @@ if __name__ == "__main__":
         except Exception as e:
             logging.warning(str(e))
             print(str(e))
-            t = time.time()
-            cv2.imwrite(f"err/{t}", frame)                

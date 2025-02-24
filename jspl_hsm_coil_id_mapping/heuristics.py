@@ -22,7 +22,7 @@ class OCRBuffer:
     def __init__(self, id_len=10):
         self.buffer = dict()
         self.id_len = id_len
-        self.year = str(datetime.now().year)[-2:]
+        self.year = int(str(datetime.now().year)[-2:])
     
     def _validate(self, id):
         try:
@@ -34,7 +34,6 @@ class OCRBuffer:
         return True
 
     def add(self, id):
-        # print(id)
         if self._validate(id):
             if not id in self.buffer:
                 self.buffer[id] = 0
@@ -46,7 +45,6 @@ class OCRBuffer:
         # id, occ = max(self.buffer.items(), key=lambda x: x[1])
         # Initialize the result ID
         best_id = []
-        # Process each position across all IDs
         for position in range(self.id_len):
             # Count character occurrences at this position
             char_counts = {}

@@ -128,7 +128,7 @@ class CoilTracker:
         _filter_large_bboxes(bboxes, image_width, image_height, size_tolerance): Filter out bounding 
                                                                                  boxes that are too large.
     """
-    def __init__(self, model=None, buffer_length=50, window_size=10):
+    def __init__(self, model=None, buffer_length=100, window_size=5):
         self.model = model
         self.buffer_length = buffer_length
         self.window_size = window_size
