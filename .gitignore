@@ -1,6 +1,11 @@
 # Data
 /data/
-
+*.jpg
+*.jpeg
+*.png
+Pipeline*
+Predictions*
+data*
 # Mac OS-specific storage files
 .DS_Store
 
